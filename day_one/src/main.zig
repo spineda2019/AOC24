@@ -1,10 +1,10 @@
 const std = @import("std");
+const puzzle_solver = @import("file_reader.zig");
 
 const Error = error{
     BadArgCount,
 };
 
-// !void is an anyerror return type
 pub fn main() !void {
     var alloc = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = alloc.allocator();
@@ -17,7 +17,8 @@ pub fn main() !void {
         std.debug.print("Invalid amount of arguments: {d}\n", .{iterator.len});
         return Error.BadArgCount;
     } else {
-        const filepath = iterator[1];
+        const filepath: [:0]u8 = iterator[1];
         std.debug.print("Puzzle input given: {s}\n", .{filepath});
+        try puzzle_solver.parse(filepath);
     }
 }
