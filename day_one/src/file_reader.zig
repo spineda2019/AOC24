@@ -20,6 +20,23 @@ const ListPair: type = struct {
         }
         return dist;
     }
+
+    pub fn similarity(self: *const ListPair) u128 {
+        var sim: u128 = 0;
+
+        for (self.left) |left| {
+            var freq: u16 = 0;
+            for (self.right) |right| {
+                if (left == right) {
+                    freq += 1;
+                }
+            }
+
+            sim += left * freq;
+        }
+
+        return sim;
+    }
 };
 
 pub fn parse(filename: [:0]u8) !void {
@@ -50,4 +67,6 @@ pub fn parse(filename: [:0]u8) !void {
     lists.sort();
     const distance: u128 = lists.distance();
     std.debug.print("Distance: {d}\n", .{distance});
+    const sim: u128 = lists.similarity();
+    std.debug.print("Similarity: {d}\n", .{sim});
 }
