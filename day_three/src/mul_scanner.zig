@@ -17,20 +17,62 @@ fn getMulFromLime(line: []const u8) !u128 {
 
     var product: u128 = 0;
 
+    var do: bool = true;
+    _ = &do;
+    var look_for_do: bool = false;
+    var look_for_dont: bool = false;
+
     for (line) |character| {
         switch (character) {
-            'm' => {
-                last_char = 'm';
+            'd' => {
+                last_char = 'd';
+                ready_for_left = false;
+                ready_for_right = false;
+                @memset(&left_operand_string, 0);
+                @memset(&right_operand_string, 0);
+                left_ptr = 0;
+                right_ptr = 0;
+                look_for_do = false;
+                look_for_dont = false;
             },
-            'u' => {
+            'o' => {
                 if (last_char) |last| {
                     last_char = switch (last) {
-                        'm' => 'u',
+                        'd' => 'o',
                         else => label: {
                             ready_for_left = false;
                             ready_for_right = false;
                             @memset(&left_operand_string, 0);
                             @memset(&right_operand_string, 0);
+                            left_ptr = 0;
+                            right_ptr = 0;
+                            look_for_do = false;
+                            look_for_dont = false;
+                            break :label null;
+                        },
+                    };
+                } else {
+                    ready_for_left = false;
+                    ready_for_right = false;
+                    @memset(&left_operand_string, 0);
+                    @memset(&right_operand_string, 0);
+                    left_ptr = 0;
+                    right_ptr = 0;
+                    look_for_do = false;
+                    look_for_dont = false;
+                }
+            },
+            'n' => {
+                if (last_char) |last| {
+                    last_char = switch (last) {
+                        'o' => 'n',
+                        else => label: {
+                            ready_for_left = false;
+                            ready_for_right = false;
+                            @memset(&left_operand_string, 0);
+                            @memset(&right_operand_string, 0);
+                            look_for_do = false;
+                            look_for_dont = false;
                             left_ptr = 0;
                             right_ptr = 0;
                             break :label null;
@@ -41,6 +83,100 @@ fn getMulFromLime(line: []const u8) !u128 {
                     ready_for_right = false;
                     @memset(&left_operand_string, 0);
                     @memset(&right_operand_string, 0);
+                    look_for_do = false;
+                    look_for_dont = false;
+                    left_ptr = 0;
+                    right_ptr = 0;
+                }
+            },
+            '\'' => {
+                if (last_char) |last| {
+                    last_char = switch (last) {
+                        'n' => '\'',
+                        else => label: {
+                            ready_for_left = false;
+                            ready_for_right = false;
+                            @memset(&left_operand_string, 0);
+                            @memset(&right_operand_string, 0);
+                            look_for_do = false;
+                            look_for_dont = false;
+                            left_ptr = 0;
+                            right_ptr = 0;
+                            break :label null;
+                        },
+                    };
+                } else {
+                    ready_for_left = false;
+                    ready_for_right = false;
+                    @memset(&left_operand_string, 0);
+                    @memset(&right_operand_string, 0);
+                    look_for_do = false;
+                    look_for_dont = false;
+                    left_ptr = 0;
+                    right_ptr = 0;
+                }
+            },
+            't' => {
+                if (last_char) |last| {
+                    last_char = switch (last) {
+                        '\'' => 't',
+                        else => label: {
+                            ready_for_left = false;
+                            ready_for_right = false;
+                            @memset(&left_operand_string, 0);
+                            @memset(&right_operand_string, 0);
+                            look_for_do = false;
+                            look_for_dont = false;
+                            left_ptr = 0;
+                            right_ptr = 0;
+                            break :label null;
+                        },
+                    };
+                } else {
+                    ready_for_left = false;
+                    ready_for_right = false;
+                    @memset(&left_operand_string, 0);
+                    @memset(&right_operand_string, 0);
+                    look_for_do = false;
+                    look_for_dont = false;
+                    left_ptr = 0;
+                    right_ptr = 0;
+                }
+            },
+            'm' => {
+                last_char = 'm';
+                ready_for_left = false;
+                ready_for_right = false;
+                @memset(&left_operand_string, 0);
+                @memset(&right_operand_string, 0);
+                look_for_do = false;
+                look_for_dont = false;
+                left_ptr = 0;
+                right_ptr = 0;
+            },
+            'u' => {
+                if (last_char) |last| {
+                    last_char = switch (last) {
+                        'm' => 'u',
+                        else => label: {
+                            ready_for_left = false;
+                            ready_for_right = false;
+                            @memset(&left_operand_string, 0);
+                            @memset(&right_operand_string, 0);
+                            look_for_do = false;
+                            look_for_dont = false;
+                            left_ptr = 0;
+                            right_ptr = 0;
+                            break :label null;
+                        },
+                    };
+                } else {
+                    ready_for_left = false;
+                    ready_for_right = false;
+                    @memset(&left_operand_string, 0);
+                    @memset(&right_operand_string, 0);
+                    look_for_do = false;
+                    look_for_dont = false;
                     left_ptr = 0;
                     right_ptr = 0;
                 }
@@ -54,6 +190,8 @@ fn getMulFromLime(line: []const u8) !u128 {
                             ready_for_right = false;
                             @memset(&left_operand_string, 0);
                             @memset(&right_operand_string, 0);
+                            look_for_do = false;
+                            look_for_dont = false;
                             left_ptr = 0;
                             right_ptr = 0;
                             break :label null;
@@ -64,6 +202,8 @@ fn getMulFromLime(line: []const u8) !u128 {
                     ready_for_right = false;
                     @memset(&left_operand_string, 0);
                     @memset(&right_operand_string, 0);
+                    look_for_do = false;
+                    look_for_dont = false;
                     left_ptr = 0;
                     right_ptr = 0;
                 }
@@ -72,11 +212,14 @@ fn getMulFromLime(line: []const u8) !u128 {
                 if (last_char) |last| {
                     last_char = switch (last) {
                         'l' => '(',
+                        't' => {},
                         else => label: {
                             ready_for_left = false;
                             ready_for_right = false;
                             @memset(&left_operand_string, 0);
                             @memset(&right_operand_string, 0);
+                            look_for_do = false;
+                            look_for_dont = false;
                             left_ptr = 0;
                             right_ptr = 0;
                             break :label null;
@@ -87,6 +230,8 @@ fn getMulFromLime(line: []const u8) !u128 {
                     ready_for_right = false;
                     @memset(&left_operand_string, 0);
                     @memset(&right_operand_string, 0);
+                    look_for_do = false;
+                    look_for_dont = false;
                     left_ptr = 0;
                     right_ptr = 0;
                 }
@@ -100,6 +245,8 @@ fn getMulFromLime(line: []const u8) !u128 {
                     ready_for_right = false;
                     @memset(&left_operand_string, 0);
                     @memset(&right_operand_string, 0);
+                    look_for_do = false;
+                    look_for_dont = false;
                     left_ptr = 0;
                     right_ptr = 0;
                     last_char = null;
@@ -117,6 +264,8 @@ fn getMulFromLime(line: []const u8) !u128 {
                 ready_for_right = false;
                 @memset(&left_operand_string, 0);
                 @memset(&right_operand_string, 0);
+                look_for_do = false;
+                look_for_dont = false;
                 left_ptr = 0;
                 right_ptr = 0;
             },
@@ -150,6 +299,8 @@ fn getMulFromLime(line: []const u8) !u128 {
                                         ready_for_right = false;
                                         @memset(&left_operand_string, 0);
                                         @memset(&right_operand_string, 0);
+                                        look_for_do = false;
+                                        look_for_dont = false;
                                         left_ptr = 0;
                                         right_ptr = 0;
                                     }
@@ -159,6 +310,8 @@ fn getMulFromLime(line: []const u8) !u128 {
                                     ready_for_right = false;
                                     @memset(&left_operand_string, 0);
                                     @memset(&right_operand_string, 0);
+                                    look_for_do = false;
+                                    look_for_dont = false;
                                     left_ptr = 0;
                                     right_ptr = 0;
                                 }
@@ -170,6 +323,8 @@ fn getMulFromLime(line: []const u8) !u128 {
                         ready_for_right = false;
                         @memset(&left_operand_string, 0);
                         @memset(&right_operand_string, 0);
+                        look_for_do = false;
+                        look_for_dont = false;
                         left_ptr = 0;
                         right_ptr = 0;
                     }
@@ -179,6 +334,8 @@ fn getMulFromLime(line: []const u8) !u128 {
                     ready_for_right = false;
                     @memset(&left_operand_string, 0);
                     @memset(&right_operand_string, 0);
+                    look_for_do = false;
+                    look_for_dont = false;
                     left_ptr = 0;
                     right_ptr = 0;
                 }
