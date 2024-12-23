@@ -1,18 +1,21 @@
 const std = @import("std");
 
 /// Stupid state machine
-fn getMulFromLime(line: []const u8) !u16 {
+fn getMulFromLime(line: []const u8) !u128 {
     var last_char: ?u8 = null;
     var left_operand_string: [3:0]u8 = .{ 0, 0, 0 };
     var right_operand_string: [3:0]u8 = .{ 0, 0, 0 };
 
-    var left_num: u16 = 1;
-    var right_num: u16 = 1;
+    var left_num: u128 = 1;
+    var right_num: u128 = 1;
 
     var ready_for_left: bool = false;
     var ready_for_right: bool = false;
 
-    var product: u16 = 1;
+    var left_ptr: u8 = 0;
+    var right_ptr: u8 = 0;
+
+    var product: u128 = 0;
 
     for (line) |character| {
         switch (character) {
@@ -28,6 +31,8 @@ fn getMulFromLime(line: []const u8) !u16 {
                             ready_for_right = false;
                             @memset(&left_operand_string, 0);
                             @memset(&right_operand_string, 0);
+                            left_ptr = 0;
+                            right_ptr = 0;
                             break :label null;
                         },
                     };
@@ -36,6 +41,8 @@ fn getMulFromLime(line: []const u8) !u16 {
                     ready_for_right = false;
                     @memset(&left_operand_string, 0);
                     @memset(&right_operand_string, 0);
+                    left_ptr = 0;
+                    right_ptr = 0;
                 }
             },
             'l' => {
@@ -47,6 +54,8 @@ fn getMulFromLime(line: []const u8) !u16 {
                             ready_for_right = false;
                             @memset(&left_operand_string, 0);
                             @memset(&right_operand_string, 0);
+                            left_ptr = 0;
+                            right_ptr = 0;
                             break :label null;
                         },
                     };
@@ -55,6 +64,8 @@ fn getMulFromLime(line: []const u8) !u16 {
                     ready_for_right = false;
                     @memset(&left_operand_string, 0);
                     @memset(&right_operand_string, 0);
+                    left_ptr = 0;
+                    right_ptr = 0;
                 }
             },
             '(' => {
@@ -66,6 +77,8 @@ fn getMulFromLime(line: []const u8) !u16 {
                             ready_for_right = false;
                             @memset(&left_operand_string, 0);
                             @memset(&right_operand_string, 0);
+                            left_ptr = 0;
+                            right_ptr = 0;
                             break :label null;
                         },
                     };
@@ -74,47 +87,100 @@ fn getMulFromLime(line: []const u8) !u16 {
                     ready_for_right = false;
                     @memset(&left_operand_string, 0);
                     @memset(&right_operand_string, 0);
+                    left_ptr = 0;
+                    right_ptr = 0;
                 }
             },
             ',' => {
-                if (last_char and ready_for_left) {
-                    left_num = try std.fmt.parseInt(u8, &left_operand_string, 10);
+                if (last_char != null and ready_for_left and !ready_for_right) {
+                    left_num = try std.fmt.parseInt(u128, left_operand_string[0..left_ptr], 10);
                     last_char = ',';
                 } else {
                     ready_for_left = false;
                     ready_for_right = false;
                     @memset(&left_operand_string, 0);
                     @memset(&right_operand_string, 0);
+                    left_ptr = 0;
+                    right_ptr = 0;
+                    last_char = null;
                 }
             },
             ')' => {
-                if (last_char and ready_for_right) {
-                    right_num = try std.fmt.parseInt(u8, &right_operand_string, 10);
+                if (last_char != null and ready_for_right and ready_for_left) {
+                    right_num = try std.fmt.parseInt(u128, right_operand_string[0..right_ptr], 10);
                     product += left_num * right_num;
+                    last_char = ')';
                 }
 
+                last_char = null;
                 ready_for_left = false;
                 ready_for_right = false;
                 @memset(&left_operand_string, 0);
                 @memset(&right_operand_string, 0);
+                left_ptr = 0;
+                right_ptr = 0;
             },
             else => {
                 // must be a digit with a nonnull last char
-                if (std.ascii.isDigit(character)) {
-                    if (last_char) |last| {
-                        last_char = switch (last) {
-                            '(' => label: {
+                if (last_char) |last| {
+                    if (std.ascii.isDigit(character)) {
+                        switch (last) {
+                            '(' => {
                                 ready_for_left = true;
                                 left_operand_string[0] = character;
-                                break :label character;
+                                last_char = character;
+                                left_ptr = 1;
                             },
-                            ',' => label: {
+                            ',' => {
                                 ready_for_right = true;
                                 right_operand_string[0] = character;
-                                break :label character;
+                                last_char = character;
+                                right_ptr = 1;
                             },
-                        };
+                            else => {
+                                if (std.ascii.isDigit(last)) {
+                                    if (ready_for_right and ready_for_left) {
+                                        right_operand_string[right_ptr] = character;
+                                        right_ptr += 1;
+                                    } else if (ready_for_left) {
+                                        left_operand_string[left_ptr] = character;
+                                        left_ptr += 1;
+                                    } else {
+                                        ready_for_left = false;
+                                        ready_for_right = false;
+                                        @memset(&left_operand_string, 0);
+                                        @memset(&right_operand_string, 0);
+                                        left_ptr = 0;
+                                        right_ptr = 0;
+                                    }
+                                } else {
+                                    last_char = null;
+                                    ready_for_left = false;
+                                    ready_for_right = false;
+                                    @memset(&left_operand_string, 0);
+                                    @memset(&right_operand_string, 0);
+                                    left_ptr = 0;
+                                    right_ptr = 0;
+                                }
+                            },
+                        }
+                    } else {
+                        last_char = null;
+                        ready_for_left = false;
+                        ready_for_right = false;
+                        @memset(&left_operand_string, 0);
+                        @memset(&right_operand_string, 0);
+                        left_ptr = 0;
+                        right_ptr = 0;
                     }
+                } else {
+                    last_char = null;
+                    ready_for_left = false;
+                    ready_for_right = false;
+                    @memset(&left_operand_string, 0);
+                    @memset(&right_operand_string, 0);
+                    left_ptr = 0;
+                    right_ptr = 0;
                 }
             },
         }
@@ -129,10 +195,10 @@ pub fn scan(filename: []const u8) !void {
     var in_reader = buf_reader.reader();
 
     var line_buffer: [4096]u8 = .{0} ** 4096;
-    var product: usize = 1;
+    var product: u128 = 0;
 
     while (try in_reader.readUntilDelimiterOrEof(&line_buffer, '\n')) |line| {
-        product *= try getMulFromLime(line);
+        product += try getMulFromLime(line);
     }
 
     std.debug.print("Mul: {d}\n", .{product});
