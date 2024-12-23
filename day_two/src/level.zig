@@ -8,7 +8,26 @@ const ReportType: type = enum {
 /// Args:
 ///     line: slice of levels in NUMERIC form
 inline fn isDampenedSafe(line: []const u8) bool {
-    _ = line;
+    var tmp_buffer: [32]u8 = .{0} ** 32;
+    for (line, 0..) |_, i| {
+        @memset(&tmp_buffer, 0);
+        var counter: u8 = 0;
+
+        for (line, 0..) |value, j| {
+            if (j == i) {
+                continue;
+            } else {
+                tmp_buffer[counter] = value;
+                counter += 1;
+            }
+        }
+
+        const buffer: []const u8 = tmp_buffer[0..counter];
+
+        if (isSafe(buffer)) {
+            return true;
+        }
+    }
     return false;
 }
 
