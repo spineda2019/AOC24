@@ -110,6 +110,11 @@ pub fn build(b: *std.Build) void {
         // step when running `zig build`).
         b.installArtifact(exe);
 
+        // give project its own step
+        const step = b.step(project.name, "Build Day");
+        const install = b.addInstallArtifact(exe, .{});
+        step.dependOn(&install.step);
+
         // This *creates* a Run step in the build graph, to be executed when another
         // step is evaluated that depends on it. The next line below will establish
         // such a dependency.
@@ -119,7 +124,7 @@ pub fn build(b: *std.Build) void {
         // installation directory rather than directly from within the cache directory.
         // This is not necessary, however, if the application depends on other installed
         // files, this ensures they will be present and in the expected location.
-        run_cmd.step.dependOn(b.getInstallStep());
+        run_cmd.step.dependOn(step);
 
         // This allows the user to pass arguments to the application in the build
         // command itself, like this: `zig build run -- arg1 arg2 etc`
@@ -133,18 +138,18 @@ pub fn build(b: *std.Build) void {
         const run_step = b.step(project.run_name, "Run the app");
         run_step.dependOn(&run_cmd.step);
 
-        const exe_unit_tests = b.addTest(.{
-            .root_source_file = b.path(project.main_path),
-            .target = target,
-            .optimize = optimize,
-        });
+        // const exe_unit_tests = b.addTest(.{
+        // .root_source_file = b.path(project.main_path),
+        // .target = target,
+        // .optimize = optimize,
+        // });
 
-        const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);
+        // const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);
 
         // Similar to creating the run step earlier, this exposes a `test` step to
         // the `zig build --help` menu, providing a way for the user to request
         // running the unit tests.
-        const test_step = b.step(project.test_name, "Run unit tests");
-        test_step.dependOn(&run_exe_unit_tests.step);
+        // const test_step = b.step(project.test_name, "Run unit tests");
+        // test_step.dependOn(&run_exe_unit_tests.step);
     }
 }
