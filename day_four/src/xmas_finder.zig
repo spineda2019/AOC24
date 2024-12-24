@@ -47,9 +47,7 @@ fn countOtherXmas(view: [][140]u8, width: u8) u32 {
                     view.len,
                     line.len,
                 });
-                @memset(&xmas_buffer[0], 0);
-                @memset(&xmas_buffer[1], 0);
-                @memset(&xmas_buffer[2], 0);
+                @memset(&xmas_buffer, .{ 0, 0, 0 });
                 xmas_buffer[0][0] = character;
                 xmas_buffer[0][1] = line[colnum + 1];
                 xmas_buffer[0][2] = line[colnum + 2];
