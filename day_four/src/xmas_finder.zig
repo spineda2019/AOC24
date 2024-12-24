@@ -1,13 +1,14 @@
 const std = @import("std");
 
 const LetterSquare: type = struct {
-    square: [][140]u8,
+    square: *const [3][3]u8,
 
-    pub fn init(square_view: [][140]u8) LetterSquare {
+    pub fn init(square_view: *const [3][3]u8) LetterSquare {
         return LetterSquare{ .square = square_view };
     }
 
     pub fn isXmas(self: *const LetterSquare) bool {
+        std.debug.print("Square:\n", .{});
         for (self.square) |row| {
             for (row) |letter| {
                 std.debug.print("{c}", .{letter});
@@ -22,15 +23,44 @@ const LetterSquare: type = struct {
 /// Part 2
 ///     Summary:
 ///         Sliding window algorithm
-fn countOtherXmas(view: [][140]u8) u32 {
+/// Remarks:
+///     Zig is behaving weird with the second [] in my 2d slice. It INSISTS
+///     that it should be 140 even though I have a runtime check to change it
+///     below ... it should be a slice ... I'm just passing in the width to
+///     avoid further wrestling with this
+fn countOtherXmas(view: [][140]u8, width: u8) u32 {
     var xmas_count: u32 = 0;
+    var xmas_buffer: [3][3]u8 = .{
+        .{ 0, 0, 0 },
+        .{ 0, 0, 0 },
+        .{ 0, 0, 0 },
+    };
 
     for (view, 0..) |line, rownum| {
-        for (line, 0..) |_, colnum| {
+        for (line, 0..) |character, colnum| {
             // row must be less than width-3 to prevent overlap
             // row must be less than height-3 to prevent overlap
-            if (colnum < (line.len - 3) and rownum < (view.len - 3)) {
-                const square: LetterSquare = LetterSquare.init(view[rownum .. rownum + 3][colnum .. colnum + 3]);
+            if (colnum < (width - 2) and rownum < (view.len - 2)) {
+                std.debug.print("(rownum, colnum : height, width) -> ({d}, {d} : {d}, {d})", .{
+                    rownum,
+                    colnum,
+                    view.len,
+                    line.len,
+                });
+                @memset(&xmas_buffer[0], 0);
+                @memset(&xmas_buffer[1], 0);
+                @memset(&xmas_buffer[2], 0);
+                xmas_buffer[0][0] = character;
+                xmas_buffer[0][1] = line[colnum + 1];
+                xmas_buffer[0][2] = line[colnum + 2];
+                xmas_buffer[1][0] = view[rownum + 1][colnum];
+                xmas_buffer[1][1] = view[rownum + 1][colnum + 1];
+                xmas_buffer[1][2] = view[rownum + 1][colnum + 2];
+                xmas_buffer[2][0] = view[rownum + 2][colnum];
+                xmas_buffer[2][1] = view[rownum + 2][colnum + 1];
+                xmas_buffer[2][2] = view[rownum + 2][colnum + 2];
+
+                const square: LetterSquare = LetterSquare.init(&xmas_buffer);
                 if (square.isXmas()) {
                     xmas_count += 1;
                 }
@@ -128,11 +158,12 @@ pub fn find(filename: []const u8) !void {
                 break :search @intCast(col);
             }
         }
+
         break :search 140;
     };
 
     const xmas_count = countXmas(file_buffer[0..line_num][0..width]);
-    const other_xmas_count = countOtherXmas(file_buffer[0..line_num][0..width]);
+    const other_xmas_count = countOtherXmas(file_buffer[0..line_num][0..width], width);
 
     std.debug.print("XMAS: {d}\n", .{xmas_count});
     std.debug.print("X-MAS: {d}\n", .{other_xmas_count});
