@@ -1,5 +1,47 @@
 const std = @import("std");
 
+const LetterSquare: type = struct {
+    square: [][140]u8,
+
+    pub fn init(square_view: [][140]u8) LetterSquare {
+        return LetterSquare{ .square = square_view };
+    }
+
+    pub fn isXmas(self: *const LetterSquare) bool {
+        for (self.square) |row| {
+            for (row) |letter| {
+                std.debug.print("{c}", .{letter});
+            }
+            std.debug.print("\n", .{});
+        }
+        std.debug.print("\n", .{});
+        return false;
+    }
+};
+
+/// Part 2
+///     Summary:
+///         Sliding window algorithm
+fn countOtherXmas(view: [][140]u8) u32 {
+    var xmas_count: u32 = 0;
+
+    for (view, 0..) |line, rownum| {
+        for (line, 0..) |_, colnum| {
+            // row must be less than width-3 to prevent overlap
+            // row must be less than height-3 to prevent overlap
+            if (colnum < (line.len - 3) and rownum < (view.len - 3)) {
+                const square: LetterSquare = LetterSquare.init(view[rownum .. rownum + 3][colnum .. colnum + 3]);
+                if (square.isXmas()) {
+                    xmas_count += 1;
+                }
+            }
+        }
+    }
+
+    return xmas_count;
+}
+
+/// Part 1
 fn countXmas(view: [][140]u8) u32 {
     var counter: u32 = 0;
 
@@ -90,6 +132,8 @@ pub fn find(filename: []const u8) !void {
     };
 
     const xmas_count = countXmas(file_buffer[0..line_num][0..width]);
+    const other_xmas_count = countOtherXmas(file_buffer[0..line_num][0..width]);
 
     std.debug.print("XMAS: {d}\n", .{xmas_count});
+    std.debug.print("X-MAS: {d}\n", .{other_xmas_count});
 }
