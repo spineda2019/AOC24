@@ -8,15 +8,58 @@ const LetterSquare: type = struct {
     }
 
     pub fn isXmas(self: *const LetterSquare) bool {
-        std.debug.print("Square:\n", .{});
-        for (self.square) |row| {
-            for (row) |letter| {
-                std.debug.print("{c}", .{letter});
-            }
-            std.debug.print("\n", .{});
+        // early catch
+        if (self.square[1][1] != 'A') {
+            return false;
         }
-        std.debug.print("\n", .{});
-        return false;
+
+        // From now on, self.square[1][1] is guaranteed to be A, so don't
+        // bother checking.
+        // actual work:
+
+        // M . .
+        // . A .
+        // . . S
+        const down_right: bool = self.square[0][0] == 'M' and self.square[2][2] == 'S';
+
+        // S . .
+        // . A .
+        // . . M
+        const up_left: bool = self.square[2][2] == 'M' and self.square[0][0] == 'S';
+
+        // . . S
+        // . A .
+        // M . .
+        const up_right: bool = self.square[2][0] == 'M' and self.square[0][2] == 'S';
+
+        // . . M
+        // . A .
+        // S . .
+        const down_left: bool = self.square[0][2] == 'M' and self.square[2][0] == 'S';
+
+        if (down_right) {
+            // M . .
+            // . A .
+            // . . S
+            return down_left or up_right;
+        } else if (up_left) {
+            // S . .
+            // . A .
+            // . . M
+            return up_right or down_left;
+        } else if (up_right) {
+            // . . S
+            // . A .
+            // M . .
+            return down_right or up_left;
+        } else if (down_left) {
+            // . . M
+            // . A .
+            // S . .
+            return down_right or up_left;
+        } else {
+            return false;
+        }
     }
 };
 
@@ -41,12 +84,6 @@ fn countOtherXmas(view: [][140]u8, width: u8) u32 {
             // row must be less than width-3 to prevent overlap
             // row must be less than height-3 to prevent overlap
             if (colnum < (width - 2) and rownum < (view.len - 2)) {
-                std.debug.print("(rownum, colnum : height, width) -> ({d}, {d} : {d}, {d})", .{
-                    rownum,
-                    colnum,
-                    view.len,
-                    line.len,
-                });
                 @memset(&xmas_buffer, .{ 0, 0, 0 });
                 xmas_buffer[0][0] = character;
                 xmas_buffer[0][1] = line[colnum + 1];
