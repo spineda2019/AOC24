@@ -8,24 +8,52 @@ const InputState: type = enum {
 const Rule: type = struct {
     before: u8,
     after: u8,
+
+    pub fn isIn(self: *const Rule, others: []const Rule) bool {
+        for (others) |other_rule| {
+            if (self.before == other_rule.before and self.after == other_rule.after) {
+                return true;
+            }
+        }
+        return false;
+    }
 };
 
 fn checkUpdate(rules: []const Rule, line: []const u8) ?u8 {
     var left_ptr: u8 = 0;
     var right_ptr: u8 = 3;
+    var seen: [256]u8 = .{0} ** 256;
+    var seen_amount: u8 = 0;
 
     while (right_ptr < line.len - 1) : ({
         left_ptr = right_ptr;
         right_ptr += 3;
+        seen_amount += 1;
     }) {
-        std.debug.print("Pair: {s},{s}\n", .{
-            line[left_ptr .. left_ptr + 2],
-            line[right_ptr .. right_ptr + 2],
-        });
+        const left: u8 = std.fmt.parseInt(u8, line[left_ptr .. left_ptr + 2], 10) catch {
+            return null;
+        };
+        const right: u8 = std.fmt.parseInt(u8, line[right_ptr .. right_ptr + 2], 10) catch {
+            return null;
+        };
+
+        seen[seen_amount] = left;
+
+        for (seen[0 .. seen_amount + 1]) |previous_value| {
+            // flip. If rules contain flipped rule, fail
+            const pair: Rule = Rule{
+                .before = right,
+                .after = previous_value,
+            };
+
+            if (pair.isIn(rules)) {
+                // out of order update
+                return null;
+            }
+        }
     }
 
-    _ = rules;
-    return null;
+    return seen[seen_amount / 2];
 }
 
 /// Guaranteed to be of form: AB|CD
@@ -36,7 +64,6 @@ fn storeRule(rule: []const u8) !Rule {
     const left_num = try std.fmt.parseInt(u8, left, 10);
     const right_num = try std.fmt.parseInt(u8, right, 10);
 
-    std.debug.print("Rule Pair: {d}|{d}\n", .{ left_num, right_num });
     return .{
         .before = left_num,
         .after = right_num,
@@ -44,7 +71,6 @@ fn storeRule(rule: []const u8) !Rule {
 }
 
 pub fn solve_puzzle(filename: [:0]u8) !void {
-    std.debug.print("Parsing file: {s}\n", .{filename});
     var file = try std.fs.cwd().openFile(filename, .{});
     var buf_reader = std.io.bufferedReader(file.reader());
     var in_reader = buf_reader.reader();
@@ -67,7 +93,6 @@ pub fn solve_puzzle(filename: [:0]u8) !void {
 
     while (try in_reader.readUntilDelimiterOrEof(&line_buffer, '\n')) |line| {
         if (line.len == 0) {
-            std.debug.print("Empty line detected!\n", .{});
             state = InputState.Update;
         } else {
             switch (state) {
