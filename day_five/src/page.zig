@@ -19,6 +19,11 @@ const Rule: type = struct {
     }
 };
 
+fn reorderBadUpdate(line: []const u8) u8 {
+    _ = line;
+    return 0;
+}
+
 fn checkUpdate(rules: []const Rule, line: []const u8) ?u8 {
     var left_ptr: u8 = 0;
     var right_ptr: u8 = 3;
@@ -90,6 +95,7 @@ pub fn solve_puzzle(filename: [:0]u8) !void {
     }} ** 2048;
     var rule_num: u16 = 0;
     var middle_num_sum: usize = 0;
+    var reordered_num_sum: usize = 0;
 
     while (try in_reader.readUntilDelimiterOrEof(&line_buffer, '\n')) |line| {
         if (line.len == 0) {
@@ -99,6 +105,8 @@ pub fn solve_puzzle(filename: [:0]u8) !void {
                 InputState.Update => {
                     if (checkUpdate(rule_buffer[0..rule_num], line)) |middle_number| {
                         middle_num_sum += middle_number;
+                    } else {
+                        reordered_num_sum += reorderBadUpdate(line);
                     }
                 },
                 InputState.Rule => {
@@ -110,4 +118,5 @@ pub fn solve_puzzle(filename: [:0]u8) !void {
     }
 
     std.debug.print("Middle Number Sum: {d}\n", .{middle_num_sum});
+    std.debug.print("Reordered Middle Number Sum: {d}\n", .{reordered_num_sum});
 }
