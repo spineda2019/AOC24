@@ -19,9 +19,60 @@ const Rule: type = struct {
     }
 };
 
-fn reorderBadUpdate(line: []const u8) u8 {
-    _ = line;
-    return 0;
+fn reorderBadUpdate(rules: []const Rule, line: []const u8) u8 {
+    var ptr: u8 = 0;
+    var seen: [256]u8 = .{0} ** 256;
+    var seen_amount: u8 = 0;
+
+    std.debug.print("Pre:\n", .{});
+    for (line) |value| {
+        std.debug.print("{c} ", .{value});
+    }
+    std.debug.print("\n", .{});
+
+    while (ptr < line.len - 1) : ({
+        ptr += 3;
+        seen_amount += 1;
+    }) {
+        const left: u8 = std.fmt.parseInt(u8, line[ptr .. ptr + 2], 10) catch {
+            return 0;
+        };
+
+        seen[seen_amount] = left;
+    }
+
+    var numbers: []u8 = seen[0..seen_amount];
+
+    std.debug.print("Post:\n", .{});
+    for (numbers) |value| {
+        std.debug.print("{d} ", .{value});
+    }
+    std.debug.print("\n", .{});
+
+    std.debug.print("Pairs:\n", .{});
+    for (numbers[0..numbers.len], 0..) |num, index| {
+        for (numbers[0..index], 0..) |previous_value, inner_index| {
+            const backwards_rule: Rule = Rule{
+                .before = num,
+                .after = previous_value,
+            };
+
+            if (backwards_rule.isIn(rules)) {
+                std.debug.print("Swapping: ({d},{d})", .{ previous_value, num });
+                numbers[index] = previous_value;
+                numbers[inner_index] = num;
+            }
+        }
+    }
+
+    std.debug.print("\n", .{});
+    std.debug.print("Sorted:\n", .{});
+    for (numbers) |value| {
+        std.debug.print("{d} ", .{value});
+    }
+    std.debug.print("\n\n", .{});
+
+    return numbers[numbers.len / 2];
 }
 
 fn checkUpdate(rules: []const Rule, line: []const u8) ?u8 {
@@ -106,7 +157,7 @@ pub fn solve_puzzle(filename: [:0]u8) !void {
                     if (checkUpdate(rule_buffer[0..rule_num], line)) |middle_number| {
                         middle_num_sum += middle_number;
                     } else {
-                        reordered_num_sum += reorderBadUpdate(line);
+                        reordered_num_sum += reorderBadUpdate(rule_buffer[0..rule_num], line);
                     }
                 },
                 InputState.Rule => {
