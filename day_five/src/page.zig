@@ -24,12 +24,6 @@ fn reorderBadUpdate(rules: []const Rule, line: []const u8) u8 {
     var seen: [256]u8 = .{0} ** 256;
     var seen_amount: u8 = 0;
 
-    std.debug.print("Pre:\n", .{});
-    for (line) |value| {
-        std.debug.print("{c} ", .{value});
-    }
-    std.debug.print("\n", .{});
-
     while (ptr < line.len - 1) : ({
         ptr += 3;
         seen_amount += 1;
@@ -43,13 +37,6 @@ fn reorderBadUpdate(rules: []const Rule, line: []const u8) u8 {
 
     var numbers: []u8 = seen[0..seen_amount];
 
-    std.debug.print("Post:\n", .{});
-    for (numbers) |value| {
-        std.debug.print("{d} ", .{value});
-    }
-    std.debug.print("\n", .{});
-
-    std.debug.print("Pairs:\n", .{});
     for (numbers[0..numbers.len], 0..) |num, index| {
         for (numbers[0..index], 0..) |previous_value, inner_index| {
             const backwards_rule: Rule = Rule{
@@ -58,19 +45,10 @@ fn reorderBadUpdate(rules: []const Rule, line: []const u8) u8 {
             };
 
             if (backwards_rule.isIn(rules)) {
-                std.debug.print("Swapping: ({d},{d})", .{ previous_value, num });
-                numbers[index] = previous_value;
-                numbers[inner_index] = num;
+                std.mem.swap(u8, &numbers[index], &numbers[inner_index]);
             }
         }
     }
-
-    std.debug.print("\n", .{});
-    std.debug.print("Sorted:\n", .{});
-    for (numbers) |value| {
-        std.debug.print("{d} ", .{value});
-    }
-    std.debug.print("\n\n", .{});
 
     return numbers[numbers.len / 2];
 }
